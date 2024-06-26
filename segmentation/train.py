@@ -5,14 +5,11 @@ import warnings
 
 import presets
 import torch
-import torch.utils.data
 import torchvision
 import utils
 from coco_utils import get_coco
 from torch import nn
 from torch.optim.lr_scheduler import PolynomialLR
-from torchvision.transforms import functional as F, InterpolationMode
-
 
 def get_dataset(args, is_train):
     def sbd(*args, **kwargs):
@@ -33,20 +30,9 @@ def get_dataset(args, is_train):
     return ds, num_classes
 
 
-def get_transform(is_train, args):
+def get_transform(is_train):
     if is_train:
         return presets.SegmentationPresetTrain(base_size=520, crop_size=480)
-    elif args.weights and args.test_only:
-        weights = torchvision.models.get_weight(args.weights)
-        trans = weights.transforms()
-
-        def preprocessing(img, target):
-            img = trans(img)
-            size = F.get_dimensions(img)[1:]
-            target = F.resize(target, size, interpolation=InterpolationMode.NEAREST)
-            return img, F.pil_to_tensor(target)
-
-        return preprocessing
     else:
         return presets.SegmentationPresetEval(base_size=520)
 
