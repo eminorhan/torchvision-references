@@ -136,7 +136,7 @@ def main(args):
 
     data_loader = torch.utils.data.DataLoader(
         dataset,
-        batch_size=args.batch_size,
+        batch_size=args.batch_size_per_gpu,
         sampler=train_sampler,
         num_workers=args.workers,
         collate_fn=utils.collate_fn,
@@ -240,12 +240,12 @@ def get_args_parser(add_help=True):
     import argparse
 
     parser = argparse.ArgumentParser(description="PyTorch Segmentation Training", add_help=add_help)
-    parser.add_argument("--data-path", default="/datasets01/COCO/022719/", type=str, help="dataset path")
+    parser.add_argument("--data-path", default="", type=str, help="dataset path")
     parser.add_argument("--dataset", default="coco", type=str, help="dataset name")
     parser.add_argument("--model", default="fcn_resnet101", type=str, help="model name")
     parser.add_argument("--aux-loss", action="store_true", help="auxiliary loss")
     parser.add_argument("--device", default="cuda", type=str, help="device (Use cuda or cpu Default: cuda)")
-    parser.add_argument("--batch-size", default=8, type=int, help="images per gpu, the total batch size is $NGPU x batch_size")
+    parser.add_argument("--batch-size-per-gpu", default=8, type=int, help="batch size per gpu, the total batch size is $NGPU x batch_size")
     parser.add_argument("--epochs", default=30, type=int, help="number of total epochs to run")
     parser.add_argument("--workers", default=16, type=int, help="number of data loading workers (default: 16)")
     parser.add_argument("--lr", default=0.01, type=float, help="initial learning rate")
