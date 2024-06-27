@@ -91,10 +91,7 @@ def train_one_epoch(model, criterion, optimizer, data_loader, lr_scheduler, devi
     for image, target in metric_logger.log_every(data_loader, print_freq, header):
         image, target = image.to(device), target.to(device)
         with torch.cuda.amp.autocast(enabled=scaler is not None):
-            output = model(image)
-            print("Out shape:", output["out"].shape)
-            print("Aux shape:", output["aux"].shape)
-
+            output = model(image)  # output["out"] and output["aux"] both have shape: B, C, W, H where B is batch size, C is the number of classes, and W, H are the spatial dimensions of image 
             loss = criterion(output, target)
 
         optimizer.zero_grad()
@@ -169,8 +166,6 @@ def main(args):
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
         model_without_ddp = model.module
-
-    print(model_without_ddp)
 
     params_to_optimize = [
         {"params": [p for p in model_without_ddp.backbone.parameters() if p.requires_grad]},
