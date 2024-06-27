@@ -26,7 +26,7 @@ def get_dataset(args, is_train):
     p, ds_fn, num_classes = paths[args.dataset]
 
     image_set = "train" if is_train else "val"
-    ds = ds_fn(p, image_set=image_set, transforms=get_transform(is_train, args))
+    ds = ds_fn(p, image_set=image_set, transforms=get_transform(is_train))
     return ds, num_classes
 
 
@@ -92,6 +92,9 @@ def train_one_epoch(model, criterion, optimizer, data_loader, lr_scheduler, devi
         image, target = image.to(device), target.to(device)
         with torch.cuda.amp.autocast(enabled=scaler is not None):
             output = model(image)
+            print("Out shape:", output["out"].shape)
+            print("Aux shape:", output["aux"].shape)
+
             loss = criterion(output, target)
 
         optimizer.zero_grad()
@@ -167,6 +170,8 @@ def main(args):
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
         model_without_ddp = model.module
 
+    print(model_without_ddp)
+
     params_to_optimize = [
         {"params": [p for p in model_without_ddp.backbone.parameters() if p.requires_grad]},
         {"params": [p for p in model_without_ddp.classifier.parameters() if p.requires_grad]},
@@ -240,30 +245,30 @@ def get_args_parser(add_help=True):
     import argparse
 
     parser = argparse.ArgumentParser(description="PyTorch Segmentation Training", add_help=add_help)
-    parser.add_argument("--data-path", default="", type=str, help="dataset path")
+    parser.add_argument("--data_path", default="", type=str, help="dataset path")
     parser.add_argument("--dataset", default="coco", type=str, help="dataset name")
     parser.add_argument("--model", default="fcn_resnet101", type=str, help="model name")
-    parser.add_argument("--aux-loss", action="store_true", help="auxiliary loss")
+    parser.add_argument("--aux_loss", action="store_true", help="auxiliary loss")
     parser.add_argument("--device", default="cuda", type=str, help="device (Use cuda or cpu Default: cuda)")
-    parser.add_argument("--batch-size-per-gpu", default=8, type=int, help="batch size per gpu, the total batch size is $NGPU x batch_size")
+    parser.add_argument("--batch_size_per_gpu", default=8, type=int, help="batch size per gpu, the total batch size is $NGPU x batch_size")
     parser.add_argument("--epochs", default=30, type=int, help="number of total epochs to run")
     parser.add_argument("--workers", default=16, type=int, help="number of data loading workers (default: 16)")
     parser.add_argument("--lr", default=0.01, type=float, help="initial learning rate")
     parser.add_argument("--momentum", default=0.9, type=float, help="momentum")
-    parser.add_argument("--weight-decay", default=1e-4, type=float, help="weight decay (default: 1e-4)", dest="weight_decay")
-    parser.add_argument("--lr-warmup-epochs", default=0, type=int, help="the number of epochs to warmup (default: 0)")
-    parser.add_argument("--lr-warmup-method", default="linear", type=str, help="the warmup method (default: linear)")
-    parser.add_argument("--lr-warmup-decay", default=0.01, type=float, help="the decay for lr")
-    parser.add_argument("--print-freq", default=10, type=int, help="print frequency")
-    parser.add_argument("--output-dir", default=".", type=str, help="path to save outputs")
+    parser.add_argument("--weight_decay", default=1e-4, type=float, help="weight decay (default: 1e-4)", dest="weight_decay")
+    parser.add_argument("--lr_warmup_epochs", default=0, type=int, help="the number of epochs to warmup (default: 0)")
+    parser.add_argument("--lr_warmup_method", default="linear", type=str, help="the warmup method (default: linear)")
+    parser.add_argument("--lr_warmup_decay", default=0.01, type=float, help="the decay for lr")
+    parser.add_argument("--print_freq", default=10, type=int, help="print frequency")
+    parser.add_argument("--output_dir", default=".", type=str, help="path to save outputs")
     parser.add_argument("--resume", default="", type=str, help="path of checkpoint")
-    parser.add_argument("--start-epoch", default=0, type=int, help="start epoch")
-    parser.add_argument("--test-only", dest="test_only", help="Only test the model", action="store_true")
-    parser.add_argument("--use-deterministic-algorithms", action="store_true", help="Forces the use of deterministic algorithms only.")
-    parser.add_argument("--world-size", default=1, type=int, help="number of distributed processes")
-    parser.add_argument("--dist-url", default="env://", type=str, help="url used to set up distributed training")
+    parser.add_argument("--start_epoch", default=0, type=int, help="start epoch")
+    parser.add_argument("--test_only", dest="test_only", help="Only test the model", action="store_true")
+    parser.add_argument("--use_deterministic_algorithms", action="store_true", help="Forces the use of deterministic algorithms only.")
+    parser.add_argument("--world_size", default=1, type=int, help="number of distributed processes")
+    parser.add_argument("--dist_url", default="env://", type=str, help="url used to set up distributed training")
     parser.add_argument("--weights", default=None, type=str, help="the weights enum name to load")
-    parser.add_argument("--weights-backbone", default=None, type=str, help="the backbone weights enum name to load")
+    parser.add_argument("--weights_backbone", default=None, type=str, help="the backbone weights enum name to load")
     parser.add_argument("--amp", action="store_true", help="Use torch.cuda.amp for mixed precision training")
     return parser
 
